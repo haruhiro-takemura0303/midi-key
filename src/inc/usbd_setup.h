@@ -29,6 +29,7 @@ typedef enum{
 typedef enum {
 	DATA_OUT,
 	DATA_IN,
+	AIDLE,
 }eUSB_Data_Stage_Type_t;
 
 typedef enum {

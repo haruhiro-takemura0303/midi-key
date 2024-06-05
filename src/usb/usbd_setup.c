@@ -96,22 +96,6 @@ void USBDCtrlGetData(void)
 
 void USBDCtrlSetupDataInStage(void)
 {
-	switch(gSetupDP.bRequest){
-	case GET_STATUS:
-		break;
-	case CLEAR_FEATURE:
-		break;
-	case GET_DESCRIPTOR:
-		break;
-	case GET_CONFIGURATION:
-		break;
-	case GET_INTERFACE:
-		break;
-	case SYNCH_FRAME:
-		break;
-	default:
-		break;
-	}
 	// Update Count
 	if(gDataStageManager.count == 0){
 		gDataStageManager.state = DATA_STAGE_FINISH;
