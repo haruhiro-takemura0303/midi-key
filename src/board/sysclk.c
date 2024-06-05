@@ -6,7 +6,8 @@
 
 #include "stm32f3xx.h"
 
-#define SYSTICK_COUNT_NUM_1MSEC 6000
+#define SYSTICK_COUNT_NUM_1MSEC 6000U
+#define SYSTICK_COUNT_NUM_1USEC 6U
 
 /**
 * @brief  Inist Stsclk used HIS48
@@ -22,6 +23,7 @@ void InitSysclkHSI48(void)
 	RCC->CR &= ~RCC_CR_PLLON_Msk;						// Set PLL OFF
 	RCC->CFGR &= ~RCC_CFGR_PLLSRC_Msk;			// Set PLL Input as HSI/2
 	RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLMUL_Msk) | RCC_CFGR_PLLMUL12;	// Set PLL x12
+	RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE1_Msk) | (0x4 << RCC_CFGR_PPRE1_Pos);
 	RCC->CR |= RCC_CR_PLLON;								// Set PLL ON
 	while(!(RCC->CR & RCC_CR_PLLRDY_Msk));	// Waite until PLL is stable
 	
@@ -34,7 +36,7 @@ void InitSysclkHSI48(void)
 }
 
 /**
-* @brief Waite for Xm Sex
+* @brief Waite for Xm Sec
 * @param int ms
 * @param -
 * @return void
@@ -48,6 +50,25 @@ void WaiteXmsec (uint32_t ms)
 	
 	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;			// Start Count
 	for(uint32_t i = 0; i < ms; i++ ){
+			while(!(SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk));	// Waite Count 1msec
+	}
+}
+
+/**
+* @brief Waite for um Sec
+* @param int ms
+* @param -
+* @return void
+* @sa 
+* @details SysTick CLK is HCLK/8 = 6 MHz
+*/
+void Waiteumsec (uint32_t us)
+{
+	SysTick->LOAD = SYSTICK_COUNT_NUM_1USEC - 1;	// Reset Vlue For CountDown Timer(1msec)
+	SysTick->VAL = 0;
+	
+	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;			// Start Count
+	for(uint32_t i = 0; i < us; i++ ){
 			while(!(SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk));	// Waite Count 1msec
 	}
 }

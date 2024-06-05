@@ -11,6 +11,7 @@
 
 void InitSysclkHSI48(void);
 void WaiteXmsec(uint32_t ms);
+void Waiteumsec(uint32_t us);
 
 #endif // _sysclk_h
 
