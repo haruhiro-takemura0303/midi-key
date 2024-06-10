@@ -98,7 +98,7 @@ void InitPacketBuffer(int endpointNum, uint16_t size)
 	
 	/* Tx Endpoint*/
 	// Size
-	gPacketBufferPtr[endpointNum].CountTX =  size;
+	gPacketBufferPtr[endpointNum].CountTX =  0;
 	// USB Local Addr
 	gPacketBufferPtr[endpointNum].AddrTX = AllocPMA(size);
 	

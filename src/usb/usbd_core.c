@@ -4,7 +4,6 @@
 * @details 
 */
 
-#include "stm32f3xx.h"
 #include "pma.h"
 #include "usbd_core.h"
 #include "usbd_setup.h"
@@ -87,8 +86,6 @@ static void SetEndpointStatus(uint32_t endp, uint16_t status)
 	SET_ENDPOINT(endp, reg);
 }
 
-int numOfSetup = 0;
-int numofIn = 0;
 static void SetEndpointType(uint32_t endp, uint16_t type)
 {
 	// Read Reag
@@ -99,6 +96,7 @@ static void SetEndpointType(uint32_t endp, uint16_t type)
 	SET_ENDPOINT(endp, reg);
 }
 
+int testNum = 0;
 void USB_LP_CAN_RX0_IRQHandler(void)
 {
 	uint32_t flag = USB->ISTR;
@@ -109,8 +107,9 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 		// Init PMA
 		InitPMA();
 		// Set STATE RX : Valid TX : NACK
-		SetEndpointStatus(0, USB_EP_RX_VALID | USB_EP_TX_NAK);
+		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_NAK);
 		// Set Endopint as Ctrl
+		PCD_SET_EPTYPE(USB, 0, USB_EP_CONTROL);
 		SetEndpointType(0, USB_EP_CONTROL);
 		// Enable Device Addr
 		USB->DADDR |= USB_DADDR_EF;
@@ -122,45 +121,42 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 		
 		switch(epNum){
 		case EP_0:
-		{
-			int SetupState = AIDLE;
+			// Set State NACK		
+			PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_NAK, USB_EP_TX_NAK);
 			
-			SetEndpointStatus(0, USB_EP_RX_NAK | USB_EP_TX_NAK);
-			/* ----- Setup Stage -----  */
-			if(epReg & USB_EP_SETUP){
-				SET_ENDPOINT(0, epReg & ~USB_EP_CTR_RX);
-				SetupState = USBDCtrlSetupStageProc();
-			}
-			/* ----- Data Out -----  */
-			if( epReg & USB_EP_CTR_RX || SetupState == DATA_OUT) {
-				SET_ENDPOINT(0, epReg & ~USB_EP_CTR_RX);
-				//DataOutStageProc();
-				SetEndpointStatus(0, USB_EP_RX_VALID | USB_EP_TX_NAK);		// data finish
-			}
-			/* ----- Data IN ----- */
-			if( epReg & USB_EP_CTR_TX || SetupState == DATA_IN){
-				SET_ENDPOINT(0, epReg & ~USB_EP_CTR_TX);
-				// Update EP State
-				USBDCtrlSetupDataInStage();
-				// Set Data
-				switch(USBDCtrlGetState()){
-				case DATA_STAGE_CONTINUE:
-					SetEndpointStatus(0, USB_EP_RX_STALL);
-					USBDCtrlPutData();
-					SET_ENDPOINT(0, GET_ENDPOINT(0) | USB_EP_DTOG_TX);
-					SetEndpointStatus(0, USB_EP_TX_VALID);
-					break;
-				case DATA_STAGE_LAST:
-					USBDCtrlPutData();
-					SET_ENDPOINT(0, GET_ENDPOINT(0) | USB_EP_DTOG_TX);
-					SetEndpointStatus(0, USB_EP_TX_VALID | USB_EP_RX_VALID);
-					break;
-				case DATA_STAGE_FINISH:
-					SetEndpointStatus(0, USB_EP_TX_NAK);
-					break;
+			/* ----- Ctrl Out  -----  */
+			if((flag & USB_ISTR_DIR) != 0U){
+				// Clear Ctrl Rx
+				PCD_CLEAR_RX_EP_CTR(USB, 0);
+				/* ----- Setup Stage -----  */
+				if((epReg & USB_EP_SETUP) != 0U){
+					//First  Data Stage
+					switch (USBDCtrlSetupStageProc()){
+					case DATA_IN_STAGE:
+						USBDCtrlDataInStageProc();
+						break;
+					case DATA_OUT_STAGE:
+						USBDCtrlDataOutStageProc();
+						break;
+					case NO_DATA_STAGE:
+					default:
+						break;
+					}
+				} 
+				else {
+				/*------No Setup Stage---------*/
+					USBDCtrlDataOutStageProc();
 				}
+				
+			} 
+			else {
+			/* ------ Ctrl In ------ */
+				// Clear Ctrl Tx
+				PCD_CLEAR_TX_EP_CTR(USB, 0);
+				// Update EP State
+				USBDCtrlDataInStageProc();
+				testNum++;
 			}
-		}
 			break;
 		case EP_1:
 		case EP_2:

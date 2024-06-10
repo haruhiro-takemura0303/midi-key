@@ -19,10 +19,6 @@ USB_Data_Stage_Manager_t gDataStageManager = {0};
 
 static void SetDescriptorPtr(void);
 
-inline eUSB_Data_Stage_State_t USBDCtrlGetState(void)
-{
-	return gDataStageManager.state;
-}
 
 int USBDCtrlSetupStageProc(void)
 {
@@ -33,41 +29,41 @@ int USBDCtrlSetupStageProc(void)
 	
 	switch(gSetupDP.bRequest){
 	case GET_STATUS:
-		ret = DATA_IN;
+		ret = DATA_IN_STAGE;
 		break;
 	case CLEAR_FEATURE:
 		break;
 	case SET_FEATURE:
-		ret = DATA_OUT;
+		ret = NO_DATA_STAGE;
 		break;
 	case SET_ADDRESS:
-		ret = DATA_OUT;
+		ret = NO_DATA_STAGE;
 		break;
 	case GET_DESCRIPTOR:
 		if(gDataStageManager.count == 0){
 			SetDescriptorPtr();
 		}
-		ret = DATA_IN;
+		ret = DATA_IN_STAGE;
 		break;
 	case SET_DESCRIPTOR:
-		ret = DATA_OUT;
+		ret = DATA_OUT_STAGE;
 		break;
 	case GET_CONFIGURATION:
-		ret = DATA_IN;
+		ret = DATA_IN_STAGE;
 		break;
 	case SET_CONFIGURATION:
-		ret = DATA_OUT;
+		ret = DATA_OUT_STAGE;
 		break;
 	case GET_INTERFACE:
-		ret = DATA_IN;
+		ret = DATA_IN_STAGE;
 		break;
 	case SET_INTERFACE:
-		ret = DATA_OUT;
+		ret = DATA_OUT_STAGE;
 		break;
 	case SYNCH_FRAME:
 		break;
 	case SET_SEL:
-		ret = DATA_OUT;
+		ret = DATA_OUT_STAGE;
 		break;
 	case SET_ISOCH_DELAY:
 		break;
@@ -79,7 +75,25 @@ int USBDCtrlSetupStageProc(void)
 	return ret;
 }
 
-void USBDCtrlPutData(void)
+static void SetDescriptorPtr(void)
+{
+	const uint8_t desc_type = (gSetupDP.wValue >> 8) & 0xFF;
+	switch(desc_type){
+	case USB_DESC_DEVICE:
+		gDataStageManager.pData = (uint8_t *)&dev_desc;
+		gDataStageManager.count = DEVICE_DESCRIPTOR_LENGTH;
+		break;
+	case USB_DESC_CONFIGURATION:
+		break;
+	case USB_DESC_STRING:
+		break;
+	case USB_DESC_INTERFACE:
+	case USB_DESC_ENDPOINT:
+		break;
+	}
+}
+
+static void USBDCtrlPutData(void)
 {
 	uint16_t theCount = 0;
 	if(gDataStageManager.pData){
@@ -89,12 +103,7 @@ void USBDCtrlPutData(void)
 	}
 }
 
-void USBDCtrlGetData(void)
-{
-
-}
-
-void USBDCtrlSetupDataInStage(void)
+void USBDCtrlDataInStageProc(void)
 {
 	// Update Count
 	if(gDataStageManager.count == 0){
@@ -104,9 +113,29 @@ void USBDCtrlSetupDataInStage(void)
 	} else {
 		gDataStageManager.state = DATA_STAGE_CONTINUE;
 	}
+
+	// Tx Data
+	switch(gDataStageManager.state){
+	case DATA_STAGE_CONTINUE:
+		PCD_SET_EP_RX_STATUS(USB, 0, USB_EP_RX_STALL);
+		USBDCtrlPutData();
+		PCD_TX_DTOG(USB, 0);
+		PCD_SET_EP_TX_STATUS(USB, 0, USB_EP_TX_VALID);
+		break;
+	case DATA_STAGE_LAST:
+		PCD_SET_EP_RX_STATUS(USB, 0, USB_EP_RX_NAK);
+		USBDCtrlPutData();
+		PCD_TX_DTOG(USB, 0);
+		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_VALID);
+		break;
+	case DATA_STAGE_FINISH:
+		PCD_SET_EP_RX_STATUS(USB, 0, USB_EP_RX_NAK);
+		break;
+	}
 }
 
-void USBDCtrlSetupDataOutStage(void)
+
+void USBDCtrlDataOutStageProc(void)
 {
 	switch(gSetupDP.bRequest){
 	case CLEAR_FEATURE:
@@ -132,20 +161,3 @@ void USBDCtrlSetupDataOutStage(void)
 	}
 }
 
-static void SetDescriptorPtr(void)
-{
-	const uint8_t desc_type = (gSetupDP.wValue >> 8) & 0xFF;
-	switch(desc_type){
-	case USB_DESC_DEVICE:
-		gDataStageManager.pData = (uint8_t *)&dev_desc;
-		gDataStageManager.count = DEVICE_DESCRIPTOR_LENGTH;
-		break;
-	case USB_DESC_CONFIGURATION:
-		break;
-	case USB_DESC_STRING:
-		break;
-	case USB_DESC_INTERFACE:
-	case USB_DESC_ENDPOINT:
-		break;
-	}
-}
