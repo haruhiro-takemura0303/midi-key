@@ -5,23 +5,10 @@
 */
 
 #include "stdint.h"
+#include "stdbool.h"
 #include "stm32f3xx.h"
 #include "usbd_core.h"
-
-
-#define SIZEOF_BUFFET_TBL 8U
-#define USB_COUNT_RX_MSK 0x3FFU
-
-typedef struct  {
-	uint16_t AddrTX;
-	uint16_t Pad1;
-	uint16_t CountTX;
-	uint16_t Pad2;
-	uint16_t AddrRX;
-	uint16_t Pad3;
-	uint16_t CountRX;
-	uint16_t Pad4;
-} Packet_Buffer_t;
+#include "pma.h"
 
 static uint16_t tblEndpointBuffSize[] = {
 	SIZEOF_DATA_BUFF_EP0,
@@ -30,9 +17,14 @@ static uint16_t tblEndpointBuffSize[] = {
 	SIZEOF_DATA_BUFF_EP3
 };
 
+volatile static  bool isInitPMA = false;
 volatile static uint16_t PMAHeadAddr = 0;
-volatile static Packet_Buffer_t* gPacketBufferPtr;
+volatile Packet_Buffer_t* gPacketBufferPtr;
 
+inline Packet_Buffer_t* GetPacketBufferPtr(int epNum)
+{
+	return (Packet_Buffer_t*)(&gPacketBufferPtr[epNum]);
+}
 /**
 * @brief AllocPMA
 * @param int size
@@ -202,11 +194,14 @@ void SetDP(uint32_t endp, void* dst, uint16_t size, uint16_t* sizeTX)
 */
 void InitPMA(void)
 {
-	/* Init Packet Buffer Tbl */
-	InitPacketBufferTbl();
-	/* Init Packet Buffet */
-	InitPacketBuffer(0, 64);
-	InitPacketBuffer(1, 64);
-	InitPacketBuffer(2, 64);
-	InitPacketBuffer(3, 10);
+	if(!isInitPMA){
+		/* Init Packet Buffer Tbl */
+		InitPacketBufferTbl();
+		/* Init Packet Buffet */
+		InitPacketBuffer(0, 64);
+		InitPacketBuffer(1, 64);
+		InitPacketBuffer(2, 64);
+		InitPacketBuffer(3, 10);
+		isInitPMA = true;
+	}
 }

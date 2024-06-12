@@ -52,4 +52,5 @@ int USBDCtrlSetupStageProc(void);
 void USBDCtrlDataInStageProc(void);
 void USBDCtrlDataOutStageProc(void);
 void USBDCtrlGetData(void);
+void USBCtrlStatusInStageProc(void);
 #endif // _usbd_setup_h_

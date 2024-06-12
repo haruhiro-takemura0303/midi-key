@@ -18,15 +18,16 @@ USB_Setup_DP_t gSetupDP = {0};
 USB_Data_Stage_Manager_t gDataStageManager = {0};
 
 static void SetDescriptorPtr(void);
-
+static void USBDCtrlPutData(void);
 
 int USBDCtrlSetupStageProc(void)
 {
 	// Get Setup DP
 	int ret = 0;
 	uint16_t  size = 0;
+
 	GetDP(0, &gSetupDP, &size);
-	
+
 	switch(gSetupDP.bRequest){
 	case GET_STATUS:
 		ret = DATA_IN_STAGE;
@@ -119,19 +120,19 @@ void USBDCtrlDataInStageProc(void)
 	case DATA_STAGE_CONTINUE:
 		PCD_SET_EP_RX_STATUS(USB, 0, USB_EP_RX_STALL);
 		USBDCtrlPutData();
-		PCD_TX_DTOG(USB, 0);
 		PCD_SET_EP_TX_STATUS(USB, 0, USB_EP_TX_VALID);
 		break;
 	case DATA_STAGE_LAST:
 		PCD_SET_EP_RX_STATUS(USB, 0, USB_EP_RX_NAK);
 		USBDCtrlPutData();
-		PCD_TX_DTOG(USB, 0);
+		PCD_SET_OUT_STATUS(USB, 0);
 		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_VALID);
 		break;
 	case DATA_STAGE_FINISH:
-		PCD_SET_EP_RX_STATUS(USB, 0, USB_EP_RX_NAK);
+		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_NAK);
 		break;
 	}
+	
 }
 
 
@@ -161,3 +162,21 @@ void USBDCtrlDataOutStageProc(void)
 	}
 }
 
+static void USBCtrlPutZLP(void)
+{		
+	gDataStageManager.count = 0;
+	USBDCtrlPutData();
+}
+
+void USBCtrlStatusInStageProc(void)
+{
+	switch(gSetupDP.bRequest){
+	case SET_ADDRESS:
+		USBCtrlPutZLP();
+		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_VALID);
+		//PCD_SET_EP_ADDRESS(USB, 0, gSetupDP.wValue);
+		break;
+	default:
+		break;
+	}
+}

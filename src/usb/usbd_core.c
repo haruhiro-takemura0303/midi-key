@@ -74,27 +74,6 @@ void InitUsbDevice(void)
 	StartUSBDevice();
 }
 
-static void SetEndpointStatus(uint32_t endp, uint16_t status)
-{
-	// Read Reag
-	const uint16_t curReg = GET_ENDPOINT(endp);
-	// Make New Reg
-	//uint16_t tog = (USB_EPREG_MASK ^ status) & USB_EP_T_MASK;
-	//uint16_t reg = (curReg & ~USB_EP_T_MASK) | tog;
-	uint16_t reg = (curReg & (USB_EPREG_MASK | status)) ^ status;
-	// Write New Reg
-	SET_ENDPOINT(endp, reg);
-}
-
-static void SetEndpointType(uint32_t endp, uint16_t type)
-{
-	// Read Reag
-	const uint16_t curReg = GET_ENDPOINT(endp);
-	// Make New Reg
-	uint16_t reg = (uint16_t)(curReg & USB_EP_T_MASK) | type;
-	// Write New Reg
-	SET_ENDPOINT(endp, reg);
-}
 
 int testNum = 0;
 void USB_LP_CAN_RX0_IRQHandler(void)
@@ -103,6 +82,7 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 	
 	/* Reset IRQ */
 	if(flag & USB_ISTR_RESET){
+		testNum++;
 		USB->ISTR &= ~USB_ISTR_RESET;
 		// Init PMA
 		InitPMA();
@@ -110,7 +90,6 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_NAK);
 		// Set Endopint as Ctrl
 		PCD_SET_EPTYPE(USB, 0, USB_EP_CONTROL);
-		SetEndpointType(0, USB_EP_CONTROL);
 		// Enable Device Addr
 		USB->DADDR |= USB_DADDR_EF;
 	}
@@ -139,13 +118,21 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 						USBDCtrlDataOutStageProc();
 						break;
 					case NO_DATA_STAGE:
+						USBCtrlStatusInStageProc();
 					default:
 						break;
 					}
 				} 
 				else {
 				/*------No Setup Stage---------*/
-					USBDCtrlDataOutStageProc();
+					if((epReg & USB_EP_KIND) != 0){
+						/* ---- Status Out ------- */
+						PCD_CLEAR_EP_KIND(USB, 0);
+						PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_NAK);
+					}
+					else{
+						USBDCtrlDataOutStageProc();
+					}
 				}
 				
 			} 
@@ -155,7 +142,6 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 				PCD_CLEAR_TX_EP_CTR(USB, 0);
 				// Update EP State
 				USBDCtrlDataInStageProc();
-				testNum++;
 			}
 			break;
 		case EP_1:
