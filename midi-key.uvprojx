@@ -478,6 +478,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\usb\usbd_desc.c</FilePath>
             </File>
+            <File>
+              <FileName>usbd_cdc_desc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\usb\usbd_cdc_desc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

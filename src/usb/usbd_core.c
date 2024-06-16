@@ -118,7 +118,12 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 						USBDCtrlDataOutStageProc();
 						break;
 					case NO_DATA_STAGE:
-						USBCtrlStatusInStageProc();
+						USBCtrlPutZLP();
+						PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_VALID);
+						break;
+					case SETUP_STALL:
+						PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_STALL);
+						break;
 					default:
 						break;
 					}
@@ -140,8 +145,14 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 			/* ------ Ctrl In ------ */
 				// Clear Ctrl Tx
 				PCD_CLEAR_TX_EP_CTR(USB, 0);
-				// Update EP State
-				USBDCtrlDataInStageProc();
+				if(!(GetPacketBufferPtr(0)->CountTX)){
+						/* ------ Status In ------ */
+						USBCtrlStatusInStageProc();
+						PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_NAK);
+				} else {
+					// Update EP State
+					USBDCtrlDataInStageProc();
+				}
 			}
 			break;
 		case EP_1:

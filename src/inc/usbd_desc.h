@@ -8,6 +8,7 @@
 #define USB_DESCRIPTORS_H
 
 #include <stdint.h>
+#include "usbd_cdc_desc.h"
 
 /* Type USB Descriptor */
 enum {
@@ -16,6 +17,9 @@ enum {
 	USB_DESC_STRING,
 	USB_DESC_INTERFACE,
 	USB_DESC_ENDPOINT,
+	USB_DESC_DEVICE_QUALIFIER,
+	USB_DESC_OTHER_SPEED_CONFIGURSTION,
+	USB_DESC_INTERFACE_ASSOCIATION,
 };
 
 /* Device Descriptor */
@@ -48,10 +52,6 @@ typedef struct {
     uint8_t bDescriptorType;
     uint16_t wLANGID[20];
 } USBStringDescriptor;
-
-enum {
-    STRING_DESCRIPTOR_Length = 42,
-};
 
 extern const USBStringDescriptor string_desc[10]; 
 

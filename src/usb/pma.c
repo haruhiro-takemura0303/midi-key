@@ -180,7 +180,7 @@ void SetDP(uint32_t endp, void* dst, uint16_t size, uint16_t* sizeTX)
 		theSize = tblEndpointBuffSize[endp];
 	}
 	PutPMA(gPacketBufferPtr[endp].AddrTX, dst, theSize);
-	gPacketBufferPtr[endp].CountTX = size;
+	gPacketBufferPtr[endp].CountTX = theSize;
 	*sizeTX = theSize;
 }
 

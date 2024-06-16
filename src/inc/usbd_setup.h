@@ -30,13 +30,16 @@ typedef enum {
 	DATA_OUT_STAGE,
 	DATA_IN_STAGE,
 	NO_DATA_STAGE,
+	SETUP_STALL,
 	AIDLE,
 }eUSB_Data_Stage_Type_t;
 
 typedef enum {
+	SETUP_STAGE,
 	DATA_STAGE_CONTINUE,
 	DATA_STAGE_LAST,
 	DATA_STAGE_FINISH,
+	STATUS_STAGE,
 }eUSB_Data_Stage_State_t;
 
 typedef struct{
@@ -53,4 +56,5 @@ void USBDCtrlDataInStageProc(void);
 void USBDCtrlDataOutStageProc(void);
 void USBDCtrlGetData(void);
 void USBCtrlStatusInStageProc(void);
+void USBCtrlPutZLP(void);
 #endif // _usbd_setup_h_

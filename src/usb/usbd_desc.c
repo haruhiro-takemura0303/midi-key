@@ -21,20 +21,25 @@ const USBDeviceDescriptor dev_desc = {
 };
 
 const USBStringDescriptor string_desc[10] = {
-        {}, // dummy
-        { // Serial Number
+        { // Default
+                .bLength = 3 * 2 + 2,
+                .bDescriptorType = USB_DESC_STRING,
+                .wLANGID = {'E', 'N', 'G'}},
+        { // Manufacture
                 .bLength = 4 * 2 + 2,
                 .bDescriptorType = USB_DESC_STRING,
                 .wLANGID = {'T', 'E', 'S', 'T'}
         },
-        { // Manufacturer
+        { // Product
                 .bLength = 10 * 2 + 2,
                 .bDescriptorType = USB_DESC_STRING,
                 .wLANGID = {'S', 'h', 'i', 't', ' ', 'C', 'o', 'r', 'p', '.'}
         },
-        { // Product
+        { // Serial
                 .bLength = 15 * 2 + 2,
                 .bDescriptorType = USB_DESC_STRING,
                 .wLANGID = {'U', 'n', 'c', 'o', 'm', 'm', 'u', 'n', 'i', 'c', 'a', 't', 'i', 'o', 'n'}
         },
+        {}, //dumm
 };
+
