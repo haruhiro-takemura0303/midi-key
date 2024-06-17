@@ -130,7 +130,7 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 				} 
 				else {
 				/*------No Setup Stage---------*/
-					if((epReg & USB_EP_KIND) != 0){
+					if(!(GetPacketBufferPtr(0)->CountRX & USB_COUNT_RX_MSK)){
 						/* ---- Status Out ------- */
 						PCD_CLEAR_EP_KIND(USB, 0);
 						PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_NAK);

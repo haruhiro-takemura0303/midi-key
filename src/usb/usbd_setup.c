@@ -10,6 +10,7 @@ typedef struct{
 	eUSB_Data_Stage_State_t state;
 	uint8_t* pData;
 	uint16_t padd1;
+	uint16_t txNum;
 	uint16_t count;  
 } USB_Data_Stage_Manager_t;
 
@@ -30,7 +31,7 @@ static void USBDCtrlPutData(void)
 {
 	uint16_t theCount = 0;
 	if(gDataStageManager.pData){
-		SetDP(0, gDataStageManager.pData, gDataStageManager.count, &theCount);
+		SetDP(0, gDataStageManager.pData, gDataStageManager.txNum, &theCount);
 		gDataStageManager.count -= theCount;
 		gDataStageManager.pData += theCount;
 	}
@@ -93,7 +94,7 @@ int USBDCtrlSetupStageProc(void)
 				ret = DATA_IN_STAGE;
 			} else {
 				ret = SETUP_STALL;
-				gDataStageManager.count == 0;
+				gDataStageManager.count = 0;
 			}
 		}
 		break;
@@ -129,10 +130,14 @@ int USBDCtrlSetupStageProc(void)
 
 void USBDCtrlDataInStageProc(void)
 {	
-	// Update Count
+	// Update TX Num
+	gDataStageManager.txNum = gSetupDP.wLength < gDataStageManager.count ? gSetupDP.wLength : gDataStageManager.count;
+	gDataStageManager.txNum = gDataStageManager.txNum > SIZEOF_DATA_BUFF_EP0 ? SIZEOF_DATA_BUFF_EP0 : gDataStageManager.txNum;
+	
+	// Update State
 	if(gDataStageManager.count == 0){
 		gDataStageManager.state = DATA_STAGE_FINISH;
-	} else if (gDataStageManager.count < SIZEOF_DATA_BUFF_EP0){
+	} else if (gDataStageManager.count - gDataStageManager.txNum <= 0){
 		gDataStageManager.state = DATA_STAGE_LAST;
 	} else {
 		gDataStageManager.state = DATA_STAGE_CONTINUE;
