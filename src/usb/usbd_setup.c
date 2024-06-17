@@ -50,7 +50,7 @@ static bool SetDescriptorPtr(void)
 		break;
 	case USB_DESC_CONFIGURATION:
 		gDataStageManager.pData = (uint8_t *)&cdc_config_desc;
-		gDataStageManager.count = CDC_CONFIG_DESCRIPTOR_LENGT;
+		gDataStageManager.count = USB_CDC_CONFIG_DESC_SIZE;
 		break;
 	case USB_DESC_STRING:
 		gDataStageManager.pData = (uint8_t *)&string_desc[num];
@@ -68,13 +68,37 @@ static bool SetDescriptorPtr(void)
 	return ret;
 }
 
-int USBDCtrlSetupStageProc(void)
+
+int USBDCtrlSetupStageClassProc(void)
+{
+	int ret = 0;
+	
+	switch (gSetupDP.bRequest) {
+  case CDC_SET_LINE_CODING:
+		ret = NO_DATA_STAGE;
+		break;
+  case CDC_GET_LINE_CODING:
+		gDataStageManager.pData = (uint8_t *)&cdc_line_coding;
+		gDataStageManager.count = CDC_LINE_CODING_LENGTH;
+		ret = DATA_IN_STAGE;
+		break;
+  case CDC_SET_CONTROL_LINE_STATE:
+		ret = NO_DATA_STAGE;
+		break;
+  case CDC_SEND_BREAK:
+		ret = NO_DATA_STAGE;
+		break;
+   default:
+		 ret = SETUP_STALL;
+		 break;
+    }
+	return ret;
+}
+
+int USBDCtrlSetupStageStandardProc(void)
 {
 	// Get Setup DP
 	int ret = 0;
-	uint16_t  size = 0;
-
-	GetDP(0, &gSetupDP, &size);
 
 	switch(gSetupDP.bRequest){
 	case GET_STATUS:
@@ -105,7 +129,8 @@ int USBDCtrlSetupStageProc(void)
 		ret = DATA_IN_STAGE;
 		break;
 	case SET_CONFIGURATION:
-		ret = DATA_OUT_STAGE;
+		ret = NO_DATA_STAGE;
+		/* Init CDC */
 		break;
 	case GET_INTERFACE:
 		ret = DATA_IN_STAGE;
@@ -122,6 +147,31 @@ int USBDCtrlSetupStageProc(void)
 		break;
 	case REV1:
 	case REV2:
+		break;
+	}
+	
+	return ret;
+}
+
+#define USBD_BM_REQUEST_TYPE_Msk 0x60U
+#define USBD_BM_REQUEST_TYPE_Pos 5U
+
+int USBDCtrlSetupStageProc(void)
+{
+	int ret = 0;
+	uint16_t  size = 0;
+	
+	GetDP(0, &gSetupDP, &size);
+	
+	switch((gSetupDP.bmRequestType & USBD_BM_REQUEST_TYPE_Msk) >> USBD_BM_REQUEST_TYPE_Pos){
+	case REQUEST_TYPE_STANDARD:
+		ret = USBDCtrlSetupStageStandardProc();
+		break;
+  case REQUEST_TYPE_CLASS:
+		ret = USBDCtrlSetupStageClassProc();
+		break;
+  case REQUEST_TYPE_VENDOR:
+		ret = SETUP_STALL;
 		break;
 	}
 	

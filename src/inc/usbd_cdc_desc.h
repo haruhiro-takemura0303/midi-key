@@ -3,93 +3,54 @@
 #ifndef _usbd_cdc_desc_h_
 #define _usbd_cdc_desc_h_
 
-// Configuration Descriptor
-typedef struct {
-    uint8_t  bLength;             // Size of this descriptor in bytes
-    uint8_t  bDescriptorType;     // CONFIGURATION descriptor type (0x02)
-    uint16_t wTotalLength;        // Total length of all descriptors returned for this configuration
-    uint8_t  bNumInterfaces;      // Number of interfaces supported by this configuration
-    uint8_t  bConfigurationValue; // Value to use as an argument to the SetConfiguration request
-    uint8_t  iConfiguration;      // Index of string descriptor describing this configuration
-    uint8_t  bmAttributes;        // Configuration characteristics
-    uint8_t  bMaxPower;           // Maximum power consumption of the USB device from the bus in this configuration (2mA units)
-} USB_ConfigurationDescriptor;
 
-// Interface Descriptor
-typedef struct {
-    uint8_t bLength;            // Size of this descriptor in bytes
-    uint8_t bDescriptorType;    // INTERFACE descriptor type (0x04)
-    uint8_t bInterfaceNumber;   // Number of this interface
-    uint8_t bAlternateSetting;  // Value used to select this alternate setting
-    uint8_t bNumEndpoints;      // Number of endpoints used by this interface (excluding endpoint 0)
-    uint8_t bInterfaceClass;    // Class code (assigned by the USB-IF)
-    uint8_t bInterfaceSubClass; // Subclass code (assigned by the USB-IF)
-    uint8_t bInterfaceProtocol; // Protocol code (assigned by the USB-IF)
-    uint8_t iInterface;         // Index of string descriptor describing this interface
-} USB_InterfaceDescriptor;
+#define LOBYTE(x)  ((uint8_t)((x) & 0x00FFU))
+#define HIBYTE(x)  ((uint8_t)(((x) & 0xFF00U) >> 8U))
 
-// Header Functional Descriptor
-typedef struct {
-    uint8_t  bFunctionLength;    // Size of this descriptor in bytes
-    uint8_t  bDescriptorType;    // CS_INTERFACE descriptor type (0x24)
-    uint8_t  bDescriptorSubtype; // Header functional descriptor subtype (0x00)
-    uint16_t bcdCDC;             // CDC specification release number
-} USB_CDC_HeaderFuncDescriptor;
+#define  USB_DESC_TYPE_DEVICE                           0x01U
+#define  USB_DESC_TYPE_CONFIGURATION                    0x02U
+#define  USB_DESC_TYPE_STRING                           0x03U
+#define  USB_DESC_TYPE_INTERFACE                        0x04U
+#define  USB_DESC_TYPE_ENDPOINT                         0x05U
+#define  USB_DESC_TYPE_DEVICE_QUALIFIER                 0x06U
+#define  USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION        0x07U
+#define  USB_DESC_TYPE_BOS                              0x0FU
 
-// Call Management Functional Descriptor
-typedef struct {
-    uint8_t bFunctionLength;    // Size of this descriptor in bytes
-    uint8_t bDescriptorType;    // CS_INTERFACE descriptor type (0x24)
-    uint8_t bDescriptorSubtype; // Call Management functional descriptor subtype (0x01)
-    uint8_t bmCapabilities;     // Capabilities of the call management
-    uint8_t bDataInterface;     // Interface number of the data class interface
-} USB_CDC_CallMgmtFuncDescriptor;
+#define CDC_IN_EP                                   0x81U  /* EP1 for data IN */
+#define CDC_OUT_EP                                  0x01U  /* EP1 for data OUT */
+#define CDC_CMD_EP                                  0x82U  /* EP2 for CDC commands */
+#define CDC_CMD_PACKET_SIZE                         8U  /* Control Endpoint Packet size */
+#define USB_CDC_CONFIG_DESC_SIZE 67U
+#define CDC_FS_BINTERVAL                          0x10U
+#define CDC_DATA_FS_MAX_PACKET_SIZE                 64U  /* Endpoint IN & OUT Packet size */
 
-// Abstract Control Management Functional Descriptor
-typedef struct {
-    uint8_t bFunctionLength;    // Size of this descriptor in bytes
-    uint8_t bDescriptorType;    // CS_INTERFACE descriptor type (0x24)
-    uint8_t bDescriptorSubtype; // Abstract Control Management functional descriptor subtype (0x02)
-    uint8_t bmCapabilities;     // Capabilities of the ACM
-} USB_CDC_ACMFuncDescriptor;
+typedef enum {
+    CDC_SEND_ENCAPSULATED_COMMAND = 0x00,
+    CDC_GET_ENCAPSULATED_RESPONSE = 0x01,
+    CDC_SET_COMM_FEATURE = 0x02,
+    CDC_GET_COMM_FEATURE = 0x03,
+    CDC_CLEAR_COMM_FEATURE = 0x04,
+    CDC_SET_LINE_CODING = 0x20,
+    CDC_GET_LINE_CODING = 0x21,
+    CDC_SET_CONTROL_LINE_STATE = 0x22,
+    CDC_SEND_BREAK = 0x23
+} CDC_ClassRequests;
 
-// Union Functional Descriptor
-typedef struct {
-    uint8_t bFunctionLength;      // Size of this descriptor in bytes
-    uint8_t bDescriptorType;      // CS_INTERFACE descriptor type (0x24)
-    uint8_t bDescriptorSubtype;   // Union functional descriptor subtype (0x06)
-    uint8_t bMasterInterface;     // The interface number of the Communication or Data Class interface, designated as the master or controlling interface for the union
-    uint8_t bSlaveInterface0;     // Interface number of the first slave or associated interface in the union
-    // Additional slave interfaces can be added if needed
-} USB_CDC_UnionFuncDescriptor;
-
-// Endpoint Descriptor
-typedef struct {
-    uint8_t bLength;          // Size of this descriptor in bytes
-    uint8_t bDescriptorType;  // ENDPOINT descriptor type (0x05)
-    uint8_t bEndpointAddress; // The address of the endpoint on the USB device described by this descriptor
-    uint8_t bmAttributes;     // Attributes which specify the transfer type (e.g., bulk, interrupt)
-    uint16_t wMaxPacketSize;  // Maximum packet size this endpoint is capable of sending or receiving
-    uint8_t bInterval;        // Interval for polling endpoint for data transfers
-} USB_EndpointDescriptor;
 
 typedef struct {
-    USB_ConfigurationDescriptor configDesc;          // Configuration descriptor
-    USB_InterfaceDescriptor cdcInterface;            // CDC Communication Interface descriptor
-    USB_CDC_HeaderFuncDescriptor headerFuncDesc;     // Header Functional descriptor
-    USB_CDC_CallMgmtFuncDescriptor callMgmtFuncDesc; // Call Management Functional descriptor
-    USB_CDC_ACMFuncDescriptor acmFuncDesc;           // Abstract Control Management Functional descriptor
-    USB_CDC_UnionFuncDescriptor unionFuncDesc;       // Union Functional descriptor
-    USB_EndpointDescriptor notificationEndpoint;     // Notification Endpoint descriptor
-    USB_InterfaceDescriptor dataInterface;           // CDC Data Interface descriptor
-    USB_EndpointDescriptor dataOutEndpoint;          // Data OUT Endpoint descriptor
-    USB_EndpointDescriptor dataInEndpoint;           // Data IN Endpoint descriptor
-} USB_CDC_ConfigurationDescriptor;
+    uint32_t dwDTERate;   // Baud rate
+    uint8_t bCharFormat;  // Stop bits (0: 1 Stop bit, 1: 1.5 Stop bits, 2: 2 Stop bits)
+    uint8_t bParityType;  // Parity (0: None, 1: Odd, 2: Even, 3: Mark, 4: Space)
+    uint8_t bDataBits;    // Data bits (5, 6, 7, 8 or 16)
+} CDC_Line_Coding_t;
 
 enum {
-    CDC_CONFIG_DESCRIPTOR_LENGT = sizeof(USB_CDC_ConfigurationDescriptor),
+	CDC_LINE_CODING_LENGTH = sizeof(CDC_Line_Coding_t),
 };
 
-extern const USB_CDC_ConfigurationDescriptor cdc_config_desc;
+extern CDC_Line_Coding_t cdc_line_coding;
+
+extern uint8_t cdc_config_desc[USB_CDC_CONFIG_DESC_SIZE];
+
 
 #endif //_usbd_cdc_de_c_.h

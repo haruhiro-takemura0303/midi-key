@@ -1,3 +1,4 @@
+*.uvguix*
 .vscode
 /DebugConfig
 /Objects

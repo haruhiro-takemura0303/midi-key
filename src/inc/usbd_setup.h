@@ -8,6 +8,12 @@
 #define _usbd_setup_h_
 #include "stdint.h"
 
+typedef enum {
+    REQUEST_TYPE_STANDARD = 0x00,
+    REQUEST_TYPE_CLASS,
+    REQUEST_TYPE_VENDOR,
+} eUSB_RequestType_t;
+
 typedef enum{
 	GET_STATUS = 0,
 	CLEAR_FEATURE,
