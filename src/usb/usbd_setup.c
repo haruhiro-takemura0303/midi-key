@@ -31,7 +31,7 @@ static void USBDCtrlPutData(void)
 {
 	uint16_t theCount = 0;
 	if(gDataStageManager.pData){
-		SetDP(0, gDataStageManager.pData, gDataStageManager.txNum, &theCount);
+		SetDP(0, gDataStageManager.pData, gDataStageManager.count, &theCount);
 		gDataStageManager.count -= theCount;
 		gDataStageManager.pData += theCount;
 	}
@@ -131,13 +131,12 @@ int USBDCtrlSetupStageProc(void)
 void USBDCtrlDataInStageProc(void)
 {	
 	// Update TX Num
-	gDataStageManager.txNum = gSetupDP.wLength < gDataStageManager.count ? gSetupDP.wLength : gDataStageManager.count;
-	gDataStageManager.txNum = gDataStageManager.txNum > SIZEOF_DATA_BUFF_EP0 ? SIZEOF_DATA_BUFF_EP0 : gDataStageManager.txNum;
+	gDataStageManager.count = gSetupDP.wLength < gDataStageManager.count ? gSetupDP.wLength : gDataStageManager.count;
 	
 	// Update State
 	if(gDataStageManager.count == 0){
 		gDataStageManager.state = DATA_STAGE_FINISH;
-	} else if (gDataStageManager.count - gDataStageManager.txNum <= 0){
+	} else if (gDataStageManager.count <= gSetupDP.wLength){
 		gDataStageManager.state = DATA_STAGE_LAST;
 	} else {
 		gDataStageManager.state = DATA_STAGE_CONTINUE;
