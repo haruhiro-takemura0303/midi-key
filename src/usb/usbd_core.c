@@ -115,8 +115,6 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 						USBDCtrlDataInStageProc();
 						break;
 					case DATA_OUT_STAGE:
-						USBDCtrlDataOutStageProc();
-						break;
 					case NO_DATA_STAGE:
 						USBCtrlPutZLP();
 						PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_VALID);

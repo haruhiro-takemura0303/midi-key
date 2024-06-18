@@ -45,7 +45,7 @@ typedef enum {
 	DATA_STAGE_CONTINUE,
 	DATA_STAGE_LAST,
 	DATA_STAGE_FINISH,
-	STATUS_STAGE,
+	DATA_ERROR,
 }eUSB_Data_Stage_State_t;
 
 typedef struct{

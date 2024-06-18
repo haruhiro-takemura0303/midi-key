@@ -17,14 +17,16 @@ typedef struct{
 
 USB_Setup_DP_t gSetupDP = {0};
 USB_Data_Stage_Manager_t gDataStageManager = {0};
+uint8_t gRxBuff[SIZEOF_DATA_BUFF_EP0] = {0};
+uint8_t* pAckData;
 
 static bool SetDescriptorPtr(void);
 static void USBDCtrlPutData(void);
 
 void USBCtrlPutZLP(void)
-{		
-	gDataStageManager.count = 0;
-	USBDCtrlPutData();
+{	
+	uint16_t theCount = 0;
+	SetDP(0, pAckData, 0, &theCount);
 }
 
 static void USBDCtrlPutData(void)
@@ -75,7 +77,9 @@ int USBDCtrlSetupStageClassProc(void)
 	
 	switch (gSetupDP.bRequest) {
   case CDC_SET_LINE_CODING:
-		ret = NO_DATA_STAGE;
+		gDataStageManager.pData = gRxBuff;
+		gDataStageManager.count = gSetupDP.wLength;
+		ret = DATA_OUT_STAGE;
 		break;
   case CDC_GET_LINE_CODING:
 		gDataStageManager.pData = (uint8_t *)&cdc_line_coding;
@@ -213,8 +217,28 @@ void USBDCtrlDataInStageProc(void)
 	
 }
 
+void USBDCtrlGetData(void)
+{
+		uint16_t size = 0;
+		GetDP(0, gDataStageManager.pData, &size);
+		gDataStageManager.count -= size;
+}
 
-void USBDCtrlDataOutStageProc(void)
+void USBDCtrlDataOutStageClassProc(void)
+{
+
+	switch (gSetupDP.bRequest) {
+  case CDC_SET_CONTROL_LINE_STATE:
+		break;
+	case CDC_SET_LINE_CODING:
+		break;
+  case CDC_GET_LINE_CODING:
+  default:
+		 break;
+   }
+}
+
+void USBDCtrlDataOutStageStandardProc(void)
 {
 	switch(gSetupDP.bRequest){
 	case CLEAR_FEATURE:
@@ -238,8 +262,47 @@ void USBDCtrlDataOutStageProc(void)
 	default:
 		break;
 	}
+	
 }
 
+void USBDCtrlDataOutStageProc(void)
+{
+	USBDCtrlGetData();
+	
+	// Update State
+	if(gDataStageManager.count == 0){
+		gDataStageManager.state = DATA_STAGE_FINISH;
+	}
+	else {
+		gDataStageManager.state = DATA_STAGE_CONTINUE;
+	}
+	
+	switch((gSetupDP.bmRequestType & USBD_BM_REQUEST_TYPE_Msk) >> USBD_BM_REQUEST_TYPE_Pos){
+	case REQUEST_TYPE_STANDARD:
+		USBDCtrlDataOutStageStandardProc();
+		break;
+  case REQUEST_TYPE_CLASS:
+		USBDCtrlDataOutStageClassProc();
+		break;
+  case REQUEST_TYPE_VENDOR:
+		break;
+	}
+	
+	// Rx Data
+	switch(gDataStageManager.state){
+	case DATA_STAGE_CONTINUE:
+		PCD_SET_EP_RX_STATUS(USB, 0, USB_EP_TX_STALL);
+		USBDCtrlPutData();
+		PCD_SET_EP_TX_STATUS(USB, 0, USB_EP_RX_VALID);
+		break;
+	case DATA_STAGE_LAST:
+		break;
+	case DATA_STAGE_FINISH:
+		USBCtrlPutZLP();
+		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_VALID);
+		break;
+	}
+}
 
 void USBCtrlStatusInStageProc(void)
 {

@@ -166,9 +166,9 @@ void GetPMA(uint16_t ofst, void* dst, uint16_t size)
 	}
 }
 
-void GetDP(uint32_t endp, void* dst, uint16_t* sizeTX)
+void GetDP(uint32_t endp, void* dst, uint16_t* sizeRX)
 {
-	*sizeTX = gPacketBufferPtr[endp].CountRX;
+	*sizeRX = gPacketBufferPtr[endp].CountRX & USB_COUNT_RX_MSK;
 	GetPMA(gPacketBufferPtr[endp].AddrRX, dst, gPacketBufferPtr[endp].CountRX & USB_COUNT_RX_MSK);
 }
 
