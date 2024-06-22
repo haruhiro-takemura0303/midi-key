@@ -17,8 +17,8 @@
 #define  USB_DESC_TYPE_BOS                              0x0FU
 
 #define CDC_IN_EP                                   0x81U  /* EP1 for data IN */
-#define CDC_OUT_EP                                  0x01U  /* EP1 for data OUT */
-#define CDC_CMD_EP                                  0x82U  /* EP2 for CDC commands */
+#define CDC_OUT_EP                                  0x02U  /* EP2 for data OUT */
+#define CDC_CMD_EP                                  0x83U  /* EP3 for CDC commands */
 #define CDC_CMD_PACKET_SIZE                         8U  /* Control Endpoint Packet size */
 #define USB_CDC_CONFIG_DESC_SIZE 67U
 #define CDC_FS_BINTERVAL                          0x10U

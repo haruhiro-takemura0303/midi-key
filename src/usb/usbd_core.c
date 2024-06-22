@@ -8,6 +8,7 @@
 #include "usbd_core.h"
 #include "usbd_setup.h"
 #include "sysclk.h"
+#include "usbd_cdc.h"
 
 /* ENDPOINT */
 #define USB_EPnR(n) *(volatile uint16_t *)(&USB->EP0R + 2 * (n))
@@ -90,6 +91,10 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 		PCD_SET_EP_TXRX_STATUS(USB, 0, USB_EP_RX_VALID, USB_EP_TX_NAK);
 		// Set Endopint as Ctrl
 		PCD_SET_EPTYPE(USB, 0, USB_EP_CONTROL);
+		/* Init Ea Addr */
+		PCD_SET_EP_ADDRESS(USB, 1, 1);
+		PCD_SET_EP_ADDRESS(USB, 2, 2);
+		PCD_SET_EP_ADDRESS(USB, 3, 3);
 		// Enable Device Addr
 		USB->DADDR |= USB_DADDR_EF;
 	}
@@ -154,8 +159,29 @@ void USB_LP_CAN_RX0_IRQHandler(void)
 			}
 			break;
 		case EP_1:
+			/*--------- CDC IN -----------*/
+			if((flag & USB_ISTR_DIR) == 0U){
+				// Clear Ctrl Tx
+				USBD_CDCDataInProc();
+				PCD_CLEAR_TX_EP_CTR(USB, 1);
+			}
+			break;	
 		case EP_2:
+			/*--------- CDC Out -----------*/
+			if((flag & USB_ISTR_DIR) != 0U){
+				// Clear Ctrl Rx
+				PCD_CLEAR_RX_EP_CTR(USB, 1);
+				USBD_CDCDataOutProc();
+			}
+			break;
 		case EP_3:
+			/*--------- CDC Com -----------*/
+			if((flag & USB_ISTR_DIR) == 0U){
+				// Clear Ctrl Tx
+				PCD_CLEAR_TX_EP_CTR(USB, 1);
+				USBD_CDCNotificationInProc();
+			}
+			break;
 		default:
 			break;
 		}

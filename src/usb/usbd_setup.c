@@ -3,6 +3,7 @@
 #include "usbd_setup.h"
 #include "usbd_core.h"
 #include "usbd_desc.h"
+#include "usbd_cdc.h"
 #include "pma.h"
 
 typedef struct{
@@ -135,6 +136,7 @@ int USBDCtrlSetupStageStandardProc(void)
 	case SET_CONFIGURATION:
 		ret = NO_DATA_STAGE;
 		/* Init CDC */
+		USBD_CDCInit();
 		break;
 	case GET_INTERFACE:
 		ret = DATA_IN_STAGE;
