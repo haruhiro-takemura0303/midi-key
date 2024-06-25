@@ -55,9 +55,10 @@ uint16_t AllocPMA(int size)
 * @sa -
 * @details Convert USB Local Addr to Memory addr that AHB Accesse
 */
-uint32_t* ConvPMAOfst2Addr(uint16_t ofst)
+static uint32_t* ConvPMAOfst2Addr(uint16_t ofst)
 {
-	return (uint32_t*)(USB_PMAADDR + (2 * ofst));
+	uint32_t* ptr = (uint32_t*)(USB_PMAADDR + (2 * ofst));
+	return ptr;
 }
 
 /**
@@ -119,7 +120,9 @@ void InitPacketBuffer(int endpointNum, uint16_t size)
 */
 void PutPMA(uint16_t ofst, const void* src, uint16_t size) 
 {
-	uint16_t* pma_addr = (uint16_t *)ConvPMAOfst2Addr(ofst);
+	uint32_t* ptr = (uint32_t*)(USB_PMAADDR + (2 * ofst));
+	uint16_t* pma_addr = (uint16_t *)ptr;
+	//uint16_t* pma_addr = (uint16_t *)ConvPMAOfst2Addr(ofst);
   const uint16_t* src16 = (const uint16_t*) src;
 
   // Copy data
