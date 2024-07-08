@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "usbd_desc.h": "c",
+        "usbd_core.h": "c",
+        "usbd_setup.h": "c",
+        "scan.h": "c",
+        "usbd_cdc.h": "c",
+        "stm32f3xx.h": "c",
+        "keyboard_task.h": "c",
+        "keyboard.h": "c"
+    }
+}

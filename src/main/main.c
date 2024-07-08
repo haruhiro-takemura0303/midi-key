@@ -6,16 +6,28 @@
 
 
 #include "stm32f3xx.h"
+
 #include "sysclk.h"
+#include "pin_config.h"
+
 #include "usbd_core.h"
-#include "usbd_cdc.h""
+#include "usbd_cdc.h"
 #include "pma.h"
+
+#include "scan.h"
+#include "keyboard_task.h"
 
 int main (void)
 {
     InitSysclkHSI48();
-    InitUsbDevice();
+		InitUsbDevice();
+    InitScan();
+    InitPin();
+		InitKeyboard();
+
+    StartScan();
+    
     for(;;){
-       USBD_CDCDataSend("test\r\n");
+        
     }
 }

@@ -46,7 +46,7 @@ void USBD_CDCDataSend(const char str[])
 	if(isCDCInit){
 		int sizeTx;
 		char buffer[0x64];
-    sprintf(buffer, "%s\n", str);
+    sprintf(buffer, "%s\r", str);
 		SetDP(1, buffer, strlen(buffer), &sizeTx);
 		PCD_SET_EP_TXRX_STATUS(USB, 1, USB_EP_RX_VALID, USB_EP_TX_VALID);
 	}

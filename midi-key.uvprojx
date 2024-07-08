@@ -399,10 +399,27 @@
               <FileType>1</FileType>
               <FilePath>.\src\board\sysclk.c</FilePath>
             </File>
+            <File>
+              <FileName>pin_config.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\board\pin_config.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>ext</GroupName>
+          <GroupName>keyboard</GroupName>
+          <Files>
+            <File>
+              <FileName>keyboard_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\keyboard\keyboard_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>keyboard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\keyboard\keyboard.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>usb</GroupName>
@@ -491,10 +508,27 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>task</GroupName>
+          <Files>
+            <File>
+              <FileName>task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\task\task.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>
           <GroupName>::Device</GroupName>
+          <Files>
+            <File>
+              <FileName>scan.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\keyboard\scan.c</FilePath>
+            </File>
+          </Files>
         </Group>
       </Groups>
     </Target>
